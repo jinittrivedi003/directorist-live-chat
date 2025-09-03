@@ -16,7 +16,7 @@ const io = new Server(server, {
 app.get("/", (req, res) => {
   res.send("Directorist Live Chat Server ✅");
 });
-
+app.use("/socket.io", express.static(__dirname + "/node_modules/socket.io/client-dist"));
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
