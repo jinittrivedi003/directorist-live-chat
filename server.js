@@ -1,88 +1,76 @@
-// const express = require("express");
-// const http = require("http");
-// const { Server } = require("socket.io");
-// const cors = require("cors");
-
-// const app = express();
-// app.use(cors());
-
-// const server = http.createServer(app);
-// const io = new Server(server, {
-//   cors: {
-//     origin: "*", // for testing, later restrict to your domain
-//   },
-// });
-
-// app.get("/", (req, res) => {
-//   res.send("Directorist Live Chat Server ✅");
-// });
-// app.use("/socket.io", express.static(__dirname + "/node_modules/socket.io/client-dist"));
-// io.on("connection", (socket) => {
-//   console.log("User connected:", socket.id);
-
-//   socket.on("user_connected", (user) => {
-//     console.log("User logged in:", user);
-//     io.emit("user_connected", user);
-//   });
-
-//   socket.on("send_message", (data) => {
-//     console.log("New message:", data);
-//     io.emit("new_message", data); // send to everyone
-//   });
-
-//   socket.on("edit_message", (data) => {
-//     console.log("Edit message:", data);
-//     io.emit("edit_message", data);
-//   });
-
-//   socket.on("delete_message", (data) => {
-//     console.log("Delete message:", data);
-//     io.emit("delete_message", data);
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log("User disconnected:", socket.id);
-//   });
-// });
-
-// const PORT = process.env.PORT || 3000;
-// server.listen(PORT, () => {
-//   console.log(`🚀 Chat server running on port ${PORT}`);
-// });
-
-
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
+const cors = require("cors");
 
 const app = express();
-const server = http.createServer(app);
+app.use(cors());
 
-// Create socket server
+const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: {
+    origin: "*", // for testing, later restrict to your domain
+  },
 });
 
-// Serve socket.io client
-app.use("/socket.io", express.static(path.join(__dirname, "node_modules", "socket.io", "client-dist")));
+// Store connected users
+let connectedUsers = {};
 
-// Chat logic
+app.get("/", (req, res) => {
+  res.send("Directorist Live Chat Server ✅");
+});
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  socket.on("chat message", (msg) => {
-    console.log("Message:", msg);
-    io.emit("chat message", msg); // broadcast to all clients
+  // Handle user connection
+  socket.on("user_connected", (username) => {
+    console.log("User logged in:", username);
+    connectedUsers[username] = socket.id;
+    socket.username = username;
+    
+    // Broadcast updated user list to all clients
+    io.emit("update_user_status", connectedUsers);
   });
 
+  // Handle sending messages
+  socket.on("send_message", (data) => {
+    console.log("New message:", data);
+    io.emit("new_message", data); // broadcast to all clients
+  });
+
+  // Handle message editing
+  socket.on("edit_message", (data) => {
+    console.log("Edit message:", data);
+    io.emit("edit_message", data); // broadcast to all clients
+  });
+
+  // Handle message deletion
+  socket.on("delete_message", (data) => {
+    console.log("Delete message:", data);
+    io.emit("delete_message", data); // broadcast to all clients
+  });
+
+  // Handle message read status
+  socket.on("message_read", (data) => {
+    console.log("Message read:", data);
+    io.emit("message_read", data);
+  });
+
+  // Handle disconnection
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+    
+    // Remove user from connected users list
+    if (socket.username) {
+      delete connectedUsers[socket.username];
+      // Broadcast updated user list
+      io.emit("update_user_status", connectedUsers);
+    }
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Chat server running on port ${PORT}`);
+  console.log(`🚀 Chat server running on port ${PORT}`);
 });
