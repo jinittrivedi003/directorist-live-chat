@@ -7,12 +7,8 @@ const app = express();
 app.use(cors());
 
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*", // for testing, later restrict to your domain
-  },
-});
-
+const io = new Server(server, { cors: { origin: "*" } });
+app.use('/socket.io', express.static(__dirname + '/node_modules/socket.io/client-dist'));
 // Store connected users
 let connectedUsers = {};
 
