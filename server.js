@@ -38,8 +38,7 @@ io.on("connection", (socket) => {
   // Handle sending messages
   socket.on("send_message", (data) => {
     console.log("New message:", data);
-     io.to(data.receiver_id).emit("receive_message", data);
-    io.to(data.sender_id).emit("receive_message", data);
+
     io.emit("new_message", data); // broadcast to all clients
   });
 
