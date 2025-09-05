@@ -7,7 +7,13 @@ const app = express();
 app.use(cors());
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "https://werkio.ch",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
 app.use('/socket.io', express.static(__dirname + '/node_modules/socket.io/client-dist'));
 // Store connected users
 let connectedUsers = {};
