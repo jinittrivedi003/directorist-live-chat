@@ -41,7 +41,13 @@ io.on("connection", (socket) => {
 
     io.emit("new_message", data); // broadcast to all clients
   });
+app.post("/notify", (req, res) => {
+  const { count } = req.body;
+  console.log("Received new count:", count);
 
+  io.emit("new_message", count); 
+  res.json({ success: true });
+});
   // Handle message editing
   socket.on("edit_message", (data) => {
     console.log("Edit message:", data);
